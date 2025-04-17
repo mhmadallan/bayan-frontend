@@ -9,6 +9,9 @@ const FileUpload = () => {
   const [loading, setLoading] = useState(false)
   const [summary, setSummary] = useState<string | null>(null)
   const [quiz, setQuiz] = useState<string[]>([])
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+ 
+  
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -16,6 +19,7 @@ const FileUpload = () => {
       setFile(selectedFile)
       setSummary(null)
       setQuiz([])
+      setAudioUrl(null)
     } else {
       alert('Please upload a valid PDF file.')
     }
@@ -40,6 +44,8 @@ const FileUpload = () => {
 
       setSummary(summary)
       setQuiz(quiz)
+      setAudioUrl(response.data.audioUrl)
+
     } catch (err) {
       console.error('Error:', err)
       alert('Something went wrong while analyzing the PDF.')
@@ -111,6 +117,14 @@ const FileUpload = () => {
 
       {/* Result Section */}
       {summary && <ResultCard summary={summary} quiz={quiz} />}
+
+      {audioUrl && (
+  <div className="mt-4">
+    <h4 className="text-lg font-medium mb-1">🎧 Listen to the Summary</h4>
+    <audio controls src={`http://localhost:5000${audioUrl}`} className="w-full rounded-md" />
+  </div>
+)}
+
     </div>
   )
 }
