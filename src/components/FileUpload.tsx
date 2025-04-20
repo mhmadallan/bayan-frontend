@@ -9,9 +9,14 @@ const FileUpload = () => {
   const [loading, setLoading] = useState(false)
   const [summary, setSummary] = useState<string | null>(null)
   const [quiz, setQuiz] = useState<string[]>([])
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
- 
-  
+  const [summaryAudioUrl, setSummaryAudioUrl] = useState<string | null>(null)
+  const [pageNumber, setPageNumber] = useState<number | ''>('') // top of component
+  const [originalAudioUrl, setOriginalAudioUrl] = useState<string | null>(null)
+
+
+
+
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -19,20 +24,25 @@ const FileUpload = () => {
       setFile(selectedFile)
       setSummary(null)
       setQuiz([])
-      setAudioUrl(null)
+      setSummaryAudioUrl(null)
+      setOriginalAudioUrl(null)
     } else {
       alert('Please upload a valid PDF file.')
     }
   }
 
   const handleAnalyze = async () => {
-    if (!file) return
+    if (!file || !pageNumber) {
+      alert('Please select a file and page number.')
+      return
+    }
 
     setLoading(true)
 
     try {
       const formData = new FormData()
       formData.append('pdf', file)
+      formData.append('pageNumber', pageNumber.toString()) // ✅ send page number
 
       const response = await axios.post('http://localhost:5000/api/upload', formData, {
         headers: {
@@ -40,11 +50,12 @@ const FileUpload = () => {
         },
       })
 
-      const { summary, quiz } = response.data
-
+      const { summary, quiz, summaryAudioUrl, originalAudioUrl } = response.data
       setSummary(summary)
       setQuiz(quiz)
-      setAudioUrl(response.data.audioUrl)
+      setSummaryAudioUrl(summaryAudioUrl || null)
+      setOriginalAudioUrl(originalAudioUrl || null)
+
 
     } catch (err) {
       console.error('Error:', err)
@@ -53,6 +64,7 @@ const FileUpload = () => {
       setLoading(false)
     }
   }
+
 
   return (
     <div className="flex flex-col justify-center items-center min-h-screen bg-gray-50 px-4">
@@ -102,6 +114,19 @@ const FileUpload = () => {
             </span>
           </div>
         )}
+        <div className="mt-4">
+          <label htmlFor="pageNumber" className="block text-sm text-gray-700 mb-1">📄 Page Number</label>
+          <input
+            type="number"
+            id="pageNumber"
+            min="1"
+            value={pageNumber}
+            onChange={(e) => setPageNumber(e.target.value ? parseInt(e.target.value) : '')}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            placeholder="e.g. 5"
+          />
+        </div>
+
 
         <button
           disabled={!file || loading}
@@ -118,12 +143,20 @@ const FileUpload = () => {
       {/* Result Section */}
       {summary && <ResultCard summary={summary} quiz={quiz} />}
 
-      {audioUrl && (
-  <div className="mt-4">
-    <h4 className="text-lg font-medium mb-1">🎧 Listen to the Summary</h4>
-    <audio controls src={`http://localhost:5000${audioUrl}`} className="w-full rounded-md" />
-  </div>
-)}
+      {originalAudioUrl && (
+        <div className="mt-6 w-full max-w-xl">
+          <h4 className="text-lg font-semibold mb-2">📄 Listen to Original Page</h4>
+          <audio controls className="w-full rounded-lg shadow" src={`http://localhost:5000${originalAudioUrl}`} />
+        </div>
+      )}
+
+      {summaryAudioUrl && (
+        <div className="mt-4 w-full max-w-xl">
+          <h4 className="text-lg font-semibold mb-2">🎧 Listen to the Summary</h4>
+          <audio controls className="w-full rounded-lg shadow" src={`http://localhost:5000${audioUrl}`} />
+        </div>
+      )}
+
 
     </div>
   )
