@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import ResultCard from './ResultCard'
 import readingSVG from '../assets/undraw_reading-a-book_4cap.svg'
 import { FaFilePdf } from 'react-icons/fa'
@@ -12,10 +12,35 @@ const FileUpload = () => {
   const [summaryAudioUrl, setSummaryAudioUrl] = useState<string | null>(null)
   const [pageNumber, setPageNumber] = useState<number | ''>('') // top of component
   const [originalAudioUrl, setOriginalAudioUrl] = useState<string | null>(null)
+  const originalAudioRef = useRef<HTMLAudioElement>(null)
+  const summaryAudioRef = useRef<HTMLAudioElement>(null)
+  const [originalProgress, setOriginalProgress] = useState(0)
+  const [summaryProgress, setSummaryProgress] = useState(0)
 
+  useEffect(() => {
+    const original = originalAudioRef.current
+    const summary = summaryAudioRef.current
 
+    const updateOriginalProgress = () => {
+      if (original) {
+        setOriginalProgress((original.currentTime / original.duration) * 100)
+      }
+    }
 
+    const updateSummaryProgress = () => {
+      if (summary) {
+        setSummaryProgress((summary.currentTime / summary.duration) * 100)
+      }
+    }
 
+    original?.addEventListener('timeupdate', updateOriginalProgress)
+    summary?.addEventListener('timeupdate', updateSummaryProgress)
+
+    return () => {
+      original?.removeEventListener('timeupdate', updateOriginalProgress)
+      summary?.removeEventListener('timeupdate', updateSummaryProgress)
+    }
+  }, [])
 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,18 +169,101 @@ const FileUpload = () => {
       {summary && <ResultCard summary={summary} quiz={quiz} />}
 
       {originalAudioUrl && (
-        <div className="mt-6 w-full max-w-xl">
-          <h4 className="text-lg font-semibold mb-2">📄 Listen to Original Page</h4>
-          <audio controls className="w-full rounded-lg shadow" src={`http://localhost:5000${originalAudioUrl}`} />
+        <div className="mt-6 w-full max-w-xl bg-white rounded-lg shadow p-4">
+          <h4 className="text-lg font-semibold mb-2">📄 Original Page Audio</h4>
+          <audio ref={originalAudioRef} src={`http://localhost:5000${originalAudioUrl}`} preload="metadata" />
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => originalAudioRef.current?.play()}
+              className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+            >
+              ▶️ Play
+            </button>
+            <button
+              onClick={() => originalAudioRef.current?.pause()}
+              className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600"
+            >
+              ⏸️ Pause
+            </button>
+            <button
+              onClick={() => {
+                if (originalAudioRef.current) {
+                  originalAudioRef.current.currentTime = 0
+                  originalAudioRef.current.play()
+                }
+              }}
+              className="bg-gray-600 text-white px-4 py-1 rounded hover:bg-gray-700"
+            >
+              🔁 Replay
+            </button>
+            <a
+              href={`http://localhost:5000${originalAudioUrl}`}
+              download="original-audio.mp3"
+              className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700"
+            >
+              ⬇️ Download
+            </a>
+          </div>
+          <input
+            type="range"
+            value={originalProgress}
+            onChange={(e) => {
+              const newTime = (parseFloat(e.target.value) / 100) * (originalAudioRef.current?.duration || 1)
+              if (originalAudioRef.current) originalAudioRef.current.currentTime = newTime
+            }}
+            className="w-full mt-2 accent-blue-600"
+          />
         </div>
       )}
 
       {summaryAudioUrl && (
-        <div className="mt-4 w-full max-w-xl">
-          <h4 className="text-lg font-semibold mb-2">🎧 Listen to the Summary</h4>
-          <audio controls className="w-full rounded-lg shadow" src={`http://localhost:5000${audioUrl}`} />
+        <div className="mt-6 w-full max-w-xl bg-white rounded-lg shadow p-4">
+          <h4 className="text-lg font-semibold mb-2">📄 Original Page Audio</h4>
+          <audio ref={summaryAudioRef} src={`http://localhost:5000${summaryAudioUrl}`} preload="metadata" />
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => summaryAudioRef.current?.play()}
+              className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+            >
+              ▶️ Play
+            </button>
+            <button
+              onClick={() => summaryAudioRef.current?.pause()}
+              className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600"
+            >
+              ⏸️ Pause
+            </button>
+            <button
+              onClick={() => {
+                if (summaryAudioRef.current) {
+                  summaryAudioRef.current.currentTime = 0
+                  summaryAudioRef.current.play()
+                }
+              }}
+              className="bg-gray-600 text-white px-4 py-1 rounded hover:bg-gray-700"
+            >
+              🔁 Replay
+            </button>
+            <a
+              href={`http://localhost:5000${summaryAudioUrl}`}
+              download="summary-audio.mp3"
+              className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700"
+            >
+              ⬇️ Download
+            </a>
+          </div>
+          <input
+            type="range"
+            value={summaryProgress}
+            onChange={(e) => {
+              const newTime = (parseFloat(e.target.value) / 100) * (summaryAudioRef.current?.duration || 1)
+              if (summaryAudioRef.current) summaryAudioRef.current.currentTime = newTime
+            }}
+            className="w-full mt-2 accent-blue-600"
+          />
         </div>
       )}
+
 
 
     </div>
