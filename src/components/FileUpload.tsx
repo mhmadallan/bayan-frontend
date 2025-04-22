@@ -16,6 +16,9 @@ const FileUpload = () => {
   const summaryAudioRef = useRef<HTMLAudioElement>(null)
   const [originalProgress, setOriginalProgress] = useState(0)
   const [summaryProgress, setSummaryProgress] = useState(0)
+  const [showQuiz, setShowQuiz] = useState(false)
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+
 
   useEffect(() => {
     const original = originalAudioRef.current
@@ -166,36 +169,57 @@ const FileUpload = () => {
       </div>
 
       {/* Result Section */}
-      {summary && <ResultCard summary={summary} quiz={quiz} />}
+      {summary && (
+        <>
+          <ResultCard summary={summary} quiz={[]} />
+          <button
+            onClick={() => {
+              setShowQuiz(!showQuiz)
+              setCurrentQuestionIndex(0)
+            }}
+            className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow transition"
+          >
+            {showQuiz ? '🙈 Hide Quiz' : '📝 Show Quiz'}
+          </button>
+        </>
+      )}
+      {showQuiz && quiz.length > 0 && (
+        <div className="mt-4 bg-white p-6 rounded-xl shadow max-w-xl w-full text-center">
+          <h3 className="text-lg font-semibold text-blue-800 mb-4">
+            Quiz Question {currentQuestionIndex + 1} of {quiz.length}
+          </h3>
+
+          <p className="text-gray-700 text-base mb-6">{quiz[currentQuestionIndex]}</p>
+
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+              disabled={currentQuestionIndex === 0}
+              className="px-4 py-2 bg-gray-300 text-gray-800 rounded disabled:opacity-50"
+            >
+              ⬅️ Previous
+            </button>
+
+            <button
+              onClick={() =>
+                setCurrentQuestionIndex(prev => Math.min(quiz.length - 1, prev + 1))
+              }
+              disabled={currentQuestionIndex === quiz.length - 1}
+              className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+            >
+              Next ➡️
+            </button>
+          </div>
+        </div>
+      )}
+
 
       {originalAudioUrl && (
         <div className="mt-6 w-full max-w-xl bg-white rounded-lg shadow p-4">
           <h4 className="text-lg font-semibold mb-2">📄 Original Page Audio</h4>
           <audio ref={originalAudioRef} src={`http://localhost:5000${originalAudioUrl}`} preload="metadata" />
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => originalAudioRef.current?.play()}
-              className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-            >
-              ▶️ Play
-            </button>
-            <button
-              onClick={() => originalAudioRef.current?.pause()}
-              className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600"
-            >
-              ⏸️ Pause
-            </button>
-            <button
-              onClick={() => {
-                if (originalAudioRef.current) {
-                  originalAudioRef.current.currentTime = 0
-                  originalAudioRef.current.play()
-                }
-              }}
-              className="bg-gray-600 text-white px-4 py-1 rounded hover:bg-gray-700"
-            >
-              🔁 Replay
-            </button>
+            
             <a
               href={`http://localhost:5000${originalAudioUrl}`}
               download="original-audio.mp3"
