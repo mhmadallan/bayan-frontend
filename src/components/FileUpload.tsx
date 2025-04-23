@@ -14,36 +14,11 @@ const FileUpload = () => {
   const [originalAudioUrl, setOriginalAudioUrl] = useState<string | null>(null)
   const originalAudioRef = useRef<HTMLAudioElement>(null)
   const summaryAudioRef = useRef<HTMLAudioElement>(null)
-  const [originalProgress, setOriginalProgress] = useState(0)
-  const [summaryProgress, setSummaryProgress] = useState(0)
   const [showQuiz, setShowQuiz] = useState(false)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [userAnswer, setUserAnswer] = useState("")
+  const [feedback, setFeedback] = useState("")
 
-
-  useEffect(() => {
-    const original = originalAudioRef.current
-    const summary = summaryAudioRef.current
-
-    const updateOriginalProgress = () => {
-      if (original) {
-        setOriginalProgress((original.currentTime / original.duration) * 100)
-      }
-    }
-
-    const updateSummaryProgress = () => {
-      if (summary) {
-        setSummaryProgress((summary.currentTime / summary.duration) * 100)
-      }
-    }
-
-    original?.addEventListener('timeupdate', updateOriginalProgress)
-    summary?.addEventListener('timeupdate', updateSummaryProgress)
-
-    return () => {
-      original?.removeEventListener('timeupdate', updateOriginalProgress)
-      summary?.removeEventListener('timeupdate', updateSummaryProgress)
-    }
-  }, [])
 
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,16 +159,52 @@ const FileUpload = () => {
         </>
       )}
       {showQuiz && quiz.length > 0 && (
-        <div className="mt-4 bg-white p-6 rounded-xl shadow max-w-xl w-full text-center">
-          <h3 className="text-lg font-semibold text-blue-800 mb-4">
+        <div className="mt-4 bg-white p-6 rounded-xl shadow max-w-xl w-full text-center space-y-4">
+          <h3 className="text-lg font-semibold text-blue-800">
             Quiz Question {currentQuestionIndex + 1} of {quiz.length}
           </h3>
 
-          <p className="text-gray-700 text-base mb-6">{quiz[currentQuestionIndex]}</p>
+          <p className="text-gray-700 text-base">{quiz[currentQuestionIndex]}</p>
 
-          <div className="flex justify-center gap-4">
+          <textarea
+            value={userAnswer}
+            onChange={(e) => setUserAnswer(e.target.value)}
+            rows={3}
+            placeholder="Type your answer..."
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-blue-500"
+          />
+
+          <button
+            onClick={async () => {
+              try {
+                const res = await axios.post('http://localhost:5000/api/quiz-feedback', {
+                  question: quiz[currentQuestionIndex],
+                  answer: userAnswer,
+                })
+                setFeedback(res.data.feedback)
+              } catch (err) {
+                console.error(err)
+                setFeedback("Error checking answer.")
+              }
+            }}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
+          >
+            ✅ Check Answer
+          </button>
+
+          {feedback && (
+            <div className="text-sm text-gray-700 font-medium bg-gray-100 p-3 rounded-md">
+              🧠 Feedback: {feedback}
+            </div>
+          )}
+
+          <div className="flex justify-between mt-4">
             <button
-              onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+              onClick={() => {
+                setCurrentQuestionIndex(prev => Math.max(0, prev - 1))
+                setFeedback("")
+                setUserAnswer("")
+              }}
               disabled={currentQuestionIndex === 0}
               className="px-4 py-2 bg-gray-300 text-gray-800 rounded disabled:opacity-50"
             >
@@ -201,9 +212,11 @@ const FileUpload = () => {
             </button>
 
             <button
-              onClick={() =>
+              onClick={() => {
                 setCurrentQuestionIndex(prev => Math.min(quiz.length - 1, prev + 1))
-              }
+                setFeedback("")
+                setUserAnswer("")
+              }}
               disabled={currentQuestionIndex === quiz.length - 1}
               className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
             >
@@ -212,6 +225,7 @@ const FileUpload = () => {
           </div>
         </div>
       )}
+
 
 
       {originalAudioUrl && (
