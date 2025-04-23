@@ -215,80 +215,55 @@ const FileUpload = () => {
 
 
       {originalAudioUrl && (
-        <div className="mt-6 w-full max-w-xl bg-white rounded-lg shadow p-4">
-          <h4 className="text-lg font-semibold mb-2">📄 Original Page Audio</h4>
-          <audio ref={originalAudioRef} src={`http://localhost:5000${originalAudioUrl}`} preload="metadata" />
-          <div className="flex items-center gap-4">
-            
-            <a
-              href={`http://localhost:5000${originalAudioUrl}`}
-              download="original-audio.mp3"
-              className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700"
-            >
-              ⬇️ Download
-            </a>
-          </div>
-          <input
-            type="range"
-            value={originalProgress}
-            onChange={(e) => {
-              const newTime = (parseFloat(e.target.value) / 100) * (originalAudioRef.current?.duration || 1)
-              if (originalAudioRef.current) originalAudioRef.current.currentTime = newTime
-            }}
-            className="w-full mt-2 accent-blue-600"
+        <div className="mt-6 w-full max-w-xl bg-white rounded-lg shadow p-6 space-y-4 text-center">
+          <h4 className="text-xl font-semibold text-blue-800">♠️ Page Reader</h4>
+
+          {/* The link opens the audio in a new tab where browser controls appear */}
+          <a
+            href={`http://localhost:5000${originalAudioUrl}`}
+            download="original-audio.mp3"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-md shadow-md transition"
+          >
+            ▶️ Open & Download MP3
+          </a>
+
+          {/* Optional hidden player in case you still want to preload */}
+          <audio
+            ref={originalAudioRef}
+            src={`http://localhost:5000${originalAudioUrl}`}
+            preload="metadata"
+            className="hidden"
           />
         </div>
       )}
+
 
       {summaryAudioUrl && (
-        <div className="mt-6 w-full max-w-xl bg-white rounded-lg shadow p-4">
-          <h4 className="text-lg font-semibold mb-2">📄 Original Page Audio</h4>
-          <audio ref={summaryAudioRef} src={`http://localhost:5000${summaryAudioUrl}`} preload="metadata" />
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => summaryAudioRef.current?.play()}
-              className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-            >
-              ▶️ Play
-            </button>
-            <button
-              onClick={() => summaryAudioRef.current?.pause()}
-              className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600"
-            >
-              ⏸️ Pause
-            </button>
-            <button
-              onClick={() => {
-                if (summaryAudioRef.current) {
-                  summaryAudioRef.current.currentTime = 0
-                  summaryAudioRef.current.play()
-                }
-              }}
-              className="bg-gray-600 text-white px-4 py-1 rounded hover:bg-gray-700"
-            >
-              🔁 Replay
-            </button>
-            <a
-              href={`http://localhost:5000${summaryAudioUrl}`}
-              download="summary-audio.mp3"
-              className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700"
-            >
-              ⬇️ Download
-            </a>
-          </div>
-          <input
-            type="range"
-            value={summaryProgress}
-            onChange={(e) => {
-              const newTime = (parseFloat(e.target.value) / 100) * (summaryAudioRef.current?.duration || 1)
-              if (summaryAudioRef.current) summaryAudioRef.current.currentTime = newTime
-            }}
-            className="w-full mt-2 accent-blue-600"
+        <div className="mt-6 w-full max-w-xl bg-white rounded-lg shadow p-6 space-y-4 text-center">
+          <h4 className="text-xl font-semibold text-blue-800">♣️ Summary Reader</h4>
+
+          {/* The link opens the audio in a new tab where browser controls appear */}
+          <a
+            href={`http://localhost:5000${summaryAudioUrl}`}
+            download="summary-audio.mp3"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-amber-600 hover:bg-amber-700 text-white font-medium px-6 py-2 rounded-md shadow-md transition"
+          >
+            ▶️ Open & Download MP3
+          </a>
+
+          {/* Optional hidden player in case you still want to preload */}
+          <audio
+            ref={summaryAudioRef}
+            src={`http://localhost:5000${summaryAudioUrl}`}
+            preload="metadata"
+            className="hidden"
           />
         </div>
       )}
-
-
 
     </div>
   )
