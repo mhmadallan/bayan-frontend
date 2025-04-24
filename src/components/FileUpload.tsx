@@ -18,6 +18,8 @@ const FileUpload = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [userAnswer, setUserAnswer] = useState("")
   const [feedback, setFeedback] = useState("")
+  const [score, setScore] = useState(0)
+  const [answeredQuestions, setAnsweredQuestions] = useState<boolean[]>([])
 
 
 
@@ -151,6 +153,10 @@ const FileUpload = () => {
             onClick={() => {
               setShowQuiz(!showQuiz)
               setCurrentQuestionIndex(0)
+              setUserAnswer("")
+              setFeedback("")
+              setScore(0)
+              setAnsweredQuestions(new Array(quiz.length).fill(false)) // Track which were answered
             }}
             className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow transition"
           >
@@ -163,7 +169,9 @@ const FileUpload = () => {
           <h3 className="text-lg font-semibold text-blue-800">
             Quiz Question {currentQuestionIndex + 1} of {quiz.length}
           </h3>
-
+          <p className="text-sm text-gray-600 mb-2">
+            🎯 Score: {score} / {quiz.length}
+          </p>
           <p className="text-gray-700 text-base">{quiz[currentQuestionIndex]}</p>
 
           <textarea
@@ -181,12 +189,23 @@ const FileUpload = () => {
                   question: quiz[currentQuestionIndex],
                   answer: userAnswer,
                 })
-                setFeedback(res.data.feedback)
+                const feedbackText = res.data.feedback
+                setFeedback(feedbackText)
+
+                // If this question hasn't been answered yet AND is correct
+                if (!answeredQuestions[currentQuestionIndex] && feedbackText.includes("✅")) {
+                  setScore(prev => prev + 1)
+
+                  const updated = [...answeredQuestions]
+                  updated[currentQuestionIndex] = true
+                  setAnsweredQuestions(updated)
+                }
               } catch (err) {
                 console.error(err)
                 setFeedback("Error checking answer.")
               }
             }}
+
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
           >
             ✅ Check Answer
