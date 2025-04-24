@@ -20,6 +20,10 @@ const FileUpload = () => {
   const [feedback, setFeedback] = useState("")
   const [score, setScore] = useState(0)
   const [answeredQuestions, setAnsweredQuestions] = useState<boolean[]>([])
+  const [quizRecords, setQuizRecords] = useState<
+    { question: string; answer: string; feedback: string }[]
+  >([])
+
 
 
 
@@ -69,6 +73,24 @@ const FileUpload = () => {
       setLoading(false)
     }
   }
+
+  const handleExportPDF = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/export-quiz', {
+        bookTitle: file?.name || 'Book',
+        pageNumber,
+        quizData: quizRecords,
+      })
+
+      const downloadUrl = response.data.downloadUrl
+      window.open(`http://localhost:5000${downloadUrl}`, '_blank')
+    } catch (err) {
+      console.error('PDF export error:', err)
+      alert('Failed to export quiz to PDF.')
+    }
+  }
+
+
 
 
   return (
@@ -189,22 +211,36 @@ const FileUpload = () => {
                   question: quiz[currentQuestionIndex],
                   answer: userAnswer,
                 })
+
                 const feedbackText = res.data.feedback
                 setFeedback(feedbackText)
 
-                // If this question hasn't been answered yet AND is correct
+                // Update score logic...
                 if (!answeredQuestions[currentQuestionIndex] && feedbackText.includes("✅")) {
-                  setScore(prev => prev + 1)
-
+                  setScore((prev) => prev + 1)
                   const updated = [...answeredQuestions]
                   updated[currentQuestionIndex] = true
                   setAnsweredQuestions(updated)
                 }
+
+                // Save this QA to the export list
+                const record = {
+                  question: quiz[currentQuestionIndex],
+                  answer: userAnswer,
+                  feedback: feedbackText,
+                }
+
+                // Prevent duplicates if rechecking
+                const updatedRecords = [...quizRecords]
+                updatedRecords[currentQuestionIndex] = record
+                setQuizRecords(updatedRecords)
+
               } catch (err) {
                 console.error(err)
                 setFeedback("Error checking answer.")
               }
             }}
+
 
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
           >
@@ -242,6 +278,15 @@ const FileUpload = () => {
               Next ➡️
             </button>
           </div>
+          {currentQuestionIndex === quiz.length - 1 && (
+            <button
+              onClick={handleExportPDF}
+              className="mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md"
+            >
+              📄 Download Quiz Report as PDF
+            </button>
+          )}
+
         </div>
       )}
 
