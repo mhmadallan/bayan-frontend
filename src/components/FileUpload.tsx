@@ -26,9 +26,20 @@ const FileUpload = () => {
   const [quizRecords, setQuizRecords] = useState<
     { question: string; answer: string; feedback: string }[]
   >([])
+  const [darkMode, setDarkMode] = useState(false)
 
 
-
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      const newMode = !prev;
+      if (newMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      return newMode;
+    });
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -45,6 +56,7 @@ const FileUpload = () => {
 
   const handleAnalyze = async () => {
     if (!file || !pageNumber) {
+      // Check if file or page number is not selected
       alert('Please select a file and page number.')
       return
     }
@@ -87,9 +99,11 @@ const FileUpload = () => {
 
       const downloadUrl = response.data.downloadUrl
       window.open(`http://localhost:5000${downloadUrl}`, '_blank')
+      toast.success('📄 PDF quiz report ready to download!')
     } catch (err) {
       console.error('PDF export error:', err)
-      alert('Failed to export quiz to PDF.')
+      toast.error('❌ Something went wrong!')
+
     }
   }
 
@@ -97,7 +111,8 @@ const FileUpload = () => {
 
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen bg-gray-50 px-4">
+      <div className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-800'} flex flex-col justify-center items-center min-h-screen px-4 transition-colors duration-500`}>
+
 
       <ToastContainer
         position="top-center"
@@ -107,6 +122,13 @@ const FileUpload = () => {
         closeOnClick
         pauseOnHover
       />
+      <button
+        onClick={toggleDarkMode}
+        className="fixed top-4 right-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-3 py-1 rounded-full shadow transition"
+      >
+        {darkMode ? '🌞 Light' : '🌚 Dark'}
+      </button>
+
 
       {/* 👋 Hero Section */}
       <div className="text-center mb-6 max-w-xl">
@@ -188,191 +210,191 @@ const FileUpload = () => {
             📚 Analyzing your page...
           </p>
         )}
-    </div>
+      </div>
 
-      {/* Result Section */ }
-  {
-    summary && (
-      <>
-        <ResultCard summary={summary} quiz={[]} />
-        <button
-          onClick={() => {
-            setShowQuiz(!showQuiz)
-            setCurrentQuestionIndex(0)
-            setUserAnswer("")
-            setFeedback("")
-            setScore(0)
-            setAnsweredQuestions(new Array(quiz.length).fill(false)) // Track which were answered
-          }}
-          className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow transition"
-        >
-          {showQuiz ? '🙈 Hide Quiz' : '📝 Show Quiz'}
-        </button>
-      </>
-    )
-  }
-  {
-    showQuiz && quiz.length > 0 && (
-      <div className="mt-4 bg-white p-6 rounded-xl shadow max-w-xl w-full text-center space-y-4">
-        <h3 className="text-lg font-semibold text-blue-800">
-          Quiz Question {currentQuestionIndex + 1} of {quiz.length}
-        </h3>
-        <p className="text-sm text-gray-600 mb-2">
-          🎯 Score: {score} / {quiz.length}
-        </p>
-        <p className="text-gray-700 text-base">{quiz[currentQuestionIndex]}</p>
+      {/* Result Section */}
+      {
+        summary && (
+          <>
+            <ResultCard summary={summary} quiz={[]} />
+            <button
+              onClick={() => {
+                setShowQuiz(!showQuiz)
+                setCurrentQuestionIndex(0)
+                setUserAnswer("")
+                setFeedback("")
+                setScore(0)
+                setAnsweredQuestions(new Array(quiz.length).fill(false)) // Track which were answered
+              }}
+              className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow transition"
+            >
+              {showQuiz ? '🙈 Hide Quiz' : '📝 Show Quiz'}
+            </button>
+          </>
+        )
+      }
+      {
+        showQuiz && quiz.length > 0 && (
+          <div className="mt-4 bg-white p-6 rounded-xl shadow max-w-xl w-full text-center space-y-4">
+            <h3 className="text-lg font-semibold text-blue-800">
+              Quiz Question {currentQuestionIndex + 1} of {quiz.length}
+            </h3>
+            <p className="text-sm text-gray-600 mb-2">
+              🎯 Score: {score} / {quiz.length}
+            </p>
+            <p className="text-gray-700 text-base">{quiz[currentQuestionIndex]}</p>
 
-        <textarea
-          value={userAnswer}
-          onChange={(e) => setUserAnswer(e.target.value)}
-          rows={3}
-          placeholder="Type your answer..."
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-blue-500"
-        />
+            <textarea
+              value={userAnswer}
+              onChange={(e) => setUserAnswer(e.target.value)}
+              rows={3}
+              placeholder="Type your answer..."
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-blue-500"
+            />
 
-        <button
-          onClick={async () => {
-            try {
-              const res = await axios.post('http://localhost:5000/api/quiz-feedback', {
-                question: quiz[currentQuestionIndex],
-                answer: userAnswer,
-              })
+            <button
+              onClick={async () => {
+                try {
+                  const res = await axios.post('http://localhost:5000/api/quiz-feedback', {
+                    question: quiz[currentQuestionIndex],
+                    answer: userAnswer,
+                  })
 
-              const feedbackText = res.data.feedback
-              setFeedback(feedbackText)
+                  const feedbackText = res.data.feedback
+                  setFeedback(feedbackText)
 
-              // Update score logic...
-              if (!answeredQuestions[currentQuestionIndex] && feedbackText.includes("✅")) {
-                setScore((prev) => prev + 1)
-                const updated = [...answeredQuestions]
-                updated[currentQuestionIndex] = true
-                setAnsweredQuestions(updated)
-              }
+                  // Update score logic...
+                  if (!answeredQuestions[currentQuestionIndex] && feedbackText.includes("✅")) {
+                    setScore((prev) => prev + 1)
+                    const updated = [...answeredQuestions]
+                    updated[currentQuestionIndex] = true
+                    setAnsweredQuestions(updated)
+                  }
 
-              // Save this QA to the export list
-              const record = {
-                question: quiz[currentQuestionIndex],
-                answer: userAnswer,
-                feedback: feedbackText,
-              }
+                  // Save this QA to the export list
+                  const record = {
+                    question: quiz[currentQuestionIndex],
+                    answer: userAnswer,
+                    feedback: feedbackText,
+                  }
 
-              // Prevent duplicates if rechecking
-              const updatedRecords = [...quizRecords]
-              updatedRecords[currentQuestionIndex] = record
-              setQuizRecords(updatedRecords)
+                  // Prevent duplicates if rechecking
+                  const updatedRecords = [...quizRecords]
+                  updatedRecords[currentQuestionIndex] = record
+                  setQuizRecords(updatedRecords)
 
-            } catch (err) {
-              console.error(err)
-              setFeedback("Error checking answer.")
-            }
-          }}
+                } catch (err) {
+                  console.error(err)
+                  setFeedback("Error checking answer.")
+                }
+              }}
 
 
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
-        >
-          ✅ Check Answer
-        </button>
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
+            >
+              ✅ Check Answer
+            </button>
 
-        {feedback && (
-          <div className="text-sm text-gray-700 font-medium bg-gray-100 p-3 rounded-md">
-            🧠 Feedback: {feedback}
+            {feedback && (
+              <div className="text-sm text-gray-700 font-medium bg-gray-100 p-3 rounded-md">
+                🧠 Feedback: {feedback}
+              </div>
+            )}
+
+            <div className="flex justify-between mt-4">
+              <button
+                onClick={() => {
+                  setCurrentQuestionIndex(prev => Math.max(0, prev - 1))
+                  setFeedback("")
+                  setUserAnswer("")
+                }}
+                disabled={currentQuestionIndex === 0}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded disabled:opacity-50"
+              >
+                ⬅️ Previous
+              </button>
+
+              <button
+                onClick={() => {
+                  setCurrentQuestionIndex(prev => Math.min(quiz.length - 1, prev + 1))
+                  setFeedback("")
+                  setUserAnswer("")
+                }}
+                disabled={currentQuestionIndex === quiz.length - 1}
+                className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+              >
+                Next ➡️
+              </button>
+            </div>
+            {currentQuestionIndex === quiz.length - 1 && (
+              <button
+                onClick={handleExportPDF}
+                className="mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md"
+              >
+                📄 Download Quiz Report as PDF
+              </button>
+            )}
+
           </div>
-        )}
-
-        <div className="flex justify-between mt-4">
-          <button
-            onClick={() => {
-              setCurrentQuestionIndex(prev => Math.max(0, prev - 1))
-              setFeedback("")
-              setUserAnswer("")
-            }}
-            disabled={currentQuestionIndex === 0}
-            className="px-4 py-2 bg-gray-300 text-gray-800 rounded disabled:opacity-50"
-          >
-            ⬅️ Previous
-          </button>
-
-          <button
-            onClick={() => {
-              setCurrentQuestionIndex(prev => Math.min(quiz.length - 1, prev + 1))
-              setFeedback("")
-              setUserAnswer("")
-            }}
-            disabled={currentQuestionIndex === quiz.length - 1}
-            className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
-          >
-            Next ➡️
-          </button>
-        </div>
-        {currentQuestionIndex === quiz.length - 1 && (
-          <button
-            onClick={handleExportPDF}
-            className="mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md"
-          >
-            📄 Download Quiz Report as PDF
-          </button>
-        )}
-
-      </div>
-    )
-  }
+        )
+      }
 
 
 
-  {
-    originalAudioUrl && (
-      <div className="mt-6 w-full max-w-xl bg-white rounded-lg shadow p-6 space-y-4 text-center">
-        <h4 className="text-xl font-semibold text-blue-800">♠️ Page Reader</h4>
+      {
+        originalAudioUrl && (
+          <div className="mt-6 w-full max-w-xl bg-white rounded-lg shadow p-6 space-y-4 text-center">
+            <h4 className="text-xl font-semibold text-blue-800">♠️ Page Reader</h4>
 
-        {/* The link opens the audio in a new tab where browser controls appear */}
-        <a
-          href={`http://localhost:5000${originalAudioUrl}`}
-          download="original-audio.mp3"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-md shadow-md transition"
-        >
-          ▶️ Open & Download MP3
-        </a>
+            {/* The link opens the audio in a new tab where browser controls appear */}
+            <a
+              href={`http://localhost:5000${originalAudioUrl}`}
+              download="original-audio.mp3"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-md shadow-md transition"
+            >
+              ▶️ Open & Download MP3
+            </a>
 
-        {/* Optional hidden player in case you still want to preload */}
-        <audio
-          ref={originalAudioRef}
-          src={`http://localhost:5000${originalAudioUrl}`}
-          preload="metadata"
-          className="hidden"
-        />
-      </div>
-    )
-  }
+            {/* Optional hidden player in case you still want to preload */}
+            <audio
+              ref={originalAudioRef}
+              src={`http://localhost:5000${originalAudioUrl}`}
+              preload="metadata"
+              className="hidden"
+            />
+          </div>
+        )
+      }
 
 
-  {
-    summaryAudioUrl && (
-      <div className="mt-6 w-full max-w-xl bg-white rounded-lg shadow p-6 space-y-4 text-center">
-        <h4 className="text-xl font-semibold text-blue-800">♣️ Summary Reader</h4>
+      {
+        summaryAudioUrl && (
+          <div className="mt-6 w-full max-w-xl bg-white rounded-lg shadow p-6 space-y-4 text-center">
+            <h4 className="text-xl font-semibold text-blue-800">♣️ Summary Reader</h4>
 
-        {/* The link opens the audio in a new tab where browser controls appear */}
-        <a
-          href={`http://localhost:5000${summaryAudioUrl}`}
-          download="summary-audio.mp3"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block bg-amber-600 hover:bg-amber-700 text-white font-medium px-6 py-2 rounded-md shadow-md transition"
-        >
-          ▶️ Open & Download MP3
-        </a>
+            {/* The link opens the audio in a new tab where browser controls appear */}
+            <a
+              href={`http://localhost:5000${summaryAudioUrl}`}
+              download="summary-audio.mp3"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-amber-600 hover:bg-amber-700 text-white font-medium px-6 py-2 rounded-md shadow-md transition"
+            >
+              ▶️ Open & Download MP3
+            </a>
 
-        {/* Optional hidden player in case you still want to preload */}
-        <audio
-          ref={summaryAudioRef}
-          src={`http://localhost:5000${summaryAudioUrl}`}
-          preload="metadata"
-          className="hidden"
-        />
-      </div>
-    )
-  }
+            {/* Optional hidden player in case you still want to preload */}
+            <audio
+              ref={summaryAudioRef}
+              src={`http://localhost:5000${summaryAudioUrl}`}
+              preload="metadata"
+              className="hidden"
+            />
+          </div>
+        )
+      }
 
     </div >
   )
