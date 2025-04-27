@@ -1,17 +1,31 @@
-import React from 'react'
-import Header from './components/Header'
+import { useState } from 'react'
 import FileUpload from './components/FileUpload'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import Header from './components/Header'
 import Footer from './components/Footer'
-import './App.css'
 
-const App = () => {
+function App() {
+  const [darkMode, setDarkMode] = useState(false)
+//
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode)
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="max-w-3xl mx-auto p-4">
-        <FileUpload />
-      </main>
-      <Footer />
+    <div className={`${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} min-h-screen transition-colors duration-500`}>
+      <ToastContainer />
+      
+      
+      <button
+        onClick={toggleDarkMode}
+        className="fixed top-4 right-4 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-1 rounded-full shadow-md transition"
+      >
+        {darkMode ? '🌞 Light' : '🌚 Dark'}
+      </button>
+      <Header darkMode={darkMode}/>
+      <FileUpload darkMode={darkMode} />
+      <Footer darkMode={darkMode} />
     </div>
   )
 }

@@ -7,7 +7,11 @@ import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
 
-const FileUpload = () => {
+type Props = {
+  darkMode: boolean
+}
+
+const FileUpload = ({ darkMode }: Props) => {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [summary, setSummary] = useState<string | null>(null)
@@ -26,20 +30,7 @@ const FileUpload = () => {
   const [quizRecords, setQuizRecords] = useState<
     { question: string; answer: string; feedback: string }[]
   >([])
-  const [darkMode, setDarkMode] = useState(false)
-
-
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => {
-      const newMode = !prev;
-      if (newMode) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      return newMode;
-    });
-  };
+  
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -56,7 +47,7 @@ const FileUpload = () => {
 
   const handleAnalyze = async () => {
     if (!file || !pageNumber) {
-      // Check if file or page number is not selected
+      // Check if file or page number is not selected - 
       alert('Please select a file and page number.')
       return
     }
@@ -111,7 +102,7 @@ const FileUpload = () => {
 
 
   return (
-      <div className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-800'} flex flex-col justify-center items-center min-h-screen px-4 transition-colors duration-500`}>
+      <div className={` flex flex-col justify-center items-center min-h-screen px-4 transition-colors duration-500`}>
 
 
       <ToastContainer
@@ -122,12 +113,7 @@ const FileUpload = () => {
         closeOnClick
         pauseOnHover
       />
-      <button
-        onClick={toggleDarkMode}
-        className="fixed top-4 right-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-3 py-1 rounded-full shadow transition"
-      >
-        {darkMode ? '🌞 Light' : '🌚 Dark'}
-      </button>
+      
 
 
       {/* 👋 Hero Section */}
@@ -135,7 +121,7 @@ const FileUpload = () => {
         <h1 className="text-3xl md:text-4xl font-bold text-blue-700 mb-2">
           Welcome to Bayan 📘
         </h1>
-        <p className="text-gray-600 text-base md:text-lg">
+        <p className= {`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-base md:text-lg`}>
           Your AI-powered study companion. Upload a PDF, and let Bayan help you understand it with summaries, quizzes, and clarity.
         </p>
       </div>

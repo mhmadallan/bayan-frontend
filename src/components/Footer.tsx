@@ -1,10 +1,14 @@
 import React from 'react'
 
-const Footer = () => {
+type Props = {
+  darkMode: boolean
+}
+
+const Footer = ({ darkMode }: Props) => {
   return (
-    <footer className="mt-12 py-6 border-t text-center text-sm text-gray-500">
+    <footer className={`${darkMode ? 'bg-gray-900 text-gray-400' : 'border-t text-gray-500'} mt-12 py-6 text-center text-sm transition-colors duration-500`}>
       <p>
-        Made with 💙 by <span className="font-medium text-blue-700">Bayan</span> · © {new Date().getFullYear()}
+        Made with 💙 by <span className={`${darkMode ? 'text-blue-300' : 'text-blue-700'} font-medium`}>Bayan</span> · © {new Date().getFullYear()}
       </p>
       <p className="mt-1">
         AI-powered learning — Simplifying knowledge one page at a time.
